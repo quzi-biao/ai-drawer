@@ -15,6 +15,7 @@ function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1400,
     height: 900,
+    show: false, // 初始隐藏，等待 ready-to-show 事件
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,
@@ -30,8 +31,22 @@ function createWindow() {
     mainWindow.loadURL(`http://localhost:${devPort}`);
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, '../dist/index.html'));
+    const indexPath = path.join(__dirname, '../dist/index.html');
+    console.log('Loading index.html from:', indexPath);
+    mainWindow.loadFile(indexPath).catch(err => {
+      console.error('Failed to load index.html:', err);
+    });
   }
+
+  // 确保窗口显示
+  mainWindow.once('ready-to-show', () => {
+    mainWindow.show();
+  });
+
+  // 监听加载错误
+  mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription) => {
+    console.error('Page failed to load:', errorCode, errorDescription);
+  });
 }
 
 app.whenReady().then(async () => {
